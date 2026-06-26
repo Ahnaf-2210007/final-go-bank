@@ -8,7 +8,7 @@
       "maxDuration": 60
     }
   },
-  "env": [
+  "requiredEnvs": [
     "DATABASE_URL",
     "JWT_SECRET",
     "WEBAUTHN_RP_ORIGIN",
