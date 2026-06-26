@@ -28,52 +28,51 @@ func seedAccounts(store Storage) {
 }
 
 func main() {
+	log.Println("Starting GoBank server...")
+	
 	// Load the .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: No .env file found, relying on system environment variables.")
 	}
+	
 	// This line is essential. It initializes the random number generator.
 	seed := flag.Bool("seed", false, "Seed the database with initial data")
 	flag.Parse()
 
+	log.Println("Loading configuration...")
 	cfg, err := LoadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Configuration error: %v", err)
 	}
+	log.Printf("Listening on %s", cfg.ListenAddr)
 
+	log.Println("Connecting to database...")
 	store, err := NewPostgresStore(cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Database connection error: %v", err)
 	}
+	log.Println("Database connection established")
 
 	// Initialize the database schema if needed
-	// if err := store.Init(); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	if err := store.CreateAccountTable(); err != nil {
-		log.Fatal(err)
+	log.Println("Creating database tables...")
+	tables := []struct {
+		name string
+		fn   func() error
+	}{
+		{"accounts", store.CreateAccountTable},
+		{"coupon_redemptions", store.CreateCouponRedemptionTable},
+		{"pending_accounts", store.CreatePendingAccountTable},
+		{"transfers", store.CreateTransferTable},
+		{"pending_profile_updates", store.CreatePendingProfileUpdateTable},
+		{"webauthn_credentials", store.CreateWebAuthnCredentialTable},
 	}
 
-	if err := store.CreateCouponRedemptionTable(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := store.CreatePendingAccountTable(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := store.CreateTransferTable(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := store.CreatePendingProfileUpdateTable(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := store.CreateWebAuthnCredentialTable(); err != nil {
-		log.Fatal(err)
+	for _, table := range tables {
+		if err := table.fn(); err != nil {
+			log.Fatalf("Failed to create %s table: %v", table.name, err)
+		}
+		log.Printf("Created/verified %s table", table.name)
 	}
 
 	//seed stuff
@@ -82,6 +81,8 @@ func main() {
 		seedAccounts(store)
 	}
 
+	log.Println("Initializing API server...")
 	server := NewAPIServer(cfg.ListenAddr, store, cfg)
+	log.Println("GoBank server starting...")
 	server.Run()
 }
