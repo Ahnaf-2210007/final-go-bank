@@ -7,14 +7,17 @@ import (
 
 // Config holds all application configuration loaded from environment variables.
 type Config struct {
-	ListenAddr   string
-	DBDSN        string
-	JWTSecret    string
-	SMTPEmail    string
-	SMTPPassword string
-	SMTPHost     string
-	SMTPPort     string
-	CouponCode   string
+	ListenAddr        string
+	DBDSN             string
+	JWTSecret         string
+	SMTPEmail         string
+	SMTPPassword      string
+	SMTPHost          string
+	SMTPPort          string
+	CouponCode        string
+	WebAuthnRPOrigin  string
+	WebAuthnRPID      string
+	WebAuthnDisplayName string
 }
 
 // getEnv returns the value of the environment variable key, or fallback if not set.
@@ -50,13 +53,16 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &Config{
-		ListenAddr:   getEnv("LISTEN_ADDR", ":3000"),
-		DBDSN:        dsn,
-		JWTSecret:    jwtSecret,
-		SMTPEmail:    os.Getenv("SMTP_EMAIL"),
-		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
-		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
-		SMTPPort:     getEnv("SMTP_PORT", "587"),
-		CouponCode:   getEnv("COUPON_CODE", "OFFER1000"),
+		ListenAddr:      getEnv("LISTEN_ADDR", ":3000"),
+		DBDSN:           dsn,
+		JWTSecret:       jwtSecret,
+		SMTPEmail:       os.Getenv("SMTP_EMAIL"),
+		SMTPPassword:    os.Getenv("SMTP_PASSWORD"),
+		SMTPHost:        getEnv("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:        getEnv("SMTP_PORT", "587"),
+		CouponCode:      getEnv("COUPON_CODE", "OFFER1000"),
+		WebAuthnRPOrigin: getEnv("WEBAUTHN_RP_ORIGIN", "http://localhost:8080"),
+		WebAuthnRPID:     getEnv("WEBAUTHN_RP_ID", "localhost"),
+		WebAuthnDisplayName: getEnv("WEBAUTHN_DISPLAY_NAME", "GoBank"),
 	}, nil
 }

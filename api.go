@@ -41,6 +41,10 @@ func NewAPIServer(listenAddr string, store Storage, cfg *Config) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 
+	// Health check endpoint
+	router.HandleFunc("/health", makeHTTPHandlerFunc(s.handleHealth))
+
+	// Authentication routes
 	router.HandleFunc("/login", makeHTTPHandlerFunc(s.handleLogin))
 	router.HandleFunc("/account", makeHTTPHandlerFunc(s.handleAccount))
 	router.HandleFunc("/account/verification", makeHTTPHandlerFunc(s.handleVerification))
@@ -50,14 +54,47 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/account/{id}/offer", withJWTAuth(makeHTTPHandlerFunc(s.handleOffer), s.store, s.cfg.JWTSecret))
 	router.HandleFunc("/transfer", makeHTTPHandlerFunc(s.handleTransfer))
 
+	// WebAuthn routes
 	router.HandleFunc("/webauthn/register/begin", makeHTTPHandlerFunc(s.webAuthnHandler.handleRegisterBegin))
 	router.HandleFunc("/webauthn/register/finish", makeHTTPHandlerFunc(s.webAuthnHandler.handleRegisterFinish))
 	router.HandleFunc("/webauthn/login/begin", makeHTTPHandlerFunc(s.webAuthnHandler.handleLoginBegin))
 	router.HandleFunc("/webauthn/login/finish/{email}", makeHTTPHandlerFunc(s.webAuthnHandler.handleLoginFinish))
 
+	// Apply middleware
+	handler := s.corsMiddleware(router)
+
 	log.Println("JSON API server is running on", s.listenAddr)
 
-	http.ListenAndServe(s.listenAddr, router)
+	http.ListenAndServe(s.listenAddr, handler)
+}
+
+// corsMiddleware adds CORS headers to all responses and handles preflight requests
+func (s *APIServer) corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS, PUT, PATCH")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+		w.Header().Set("Access-Control-Allow-Credentials", "false")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// handleHealth returns the health status of the API server
+func (s *APIServer) handleHealth(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != "GET" {
+		return fmt.Errorf("method not allowed %s", r.Method)
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {

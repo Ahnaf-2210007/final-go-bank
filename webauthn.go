@@ -23,9 +23,9 @@ type WebAuthnHandler struct {
 
 func NewWebAuthnHandler(store Storage, cfg *Config) (*WebAuthnHandler, error) {
 	w, err := webauthn.New(&webauthn.Config{
-		RPDisplayName: "GoBank",
-		RPID:          "localhost",
-		RPOrigins:     []string{"http://localhost:8080"},
+		RPDisplayName: cfg.WebAuthnDisplayName,
+		RPID:          cfg.WebAuthnRPID,
+		RPOrigins:     []string{cfg.WebAuthnRPOrigin},
 	})
 	if err != nil {
 		return nil, err

@@ -1,0 +1,26 @@
+{
+  "buildCommand": "go build -o api .",
+  "devCommand": "go run .",
+  "framework": "go",
+  "functions": {
+    "api/**": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "env": [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "WEBAUTHN_RP_ORIGIN",
+    "WEBAUTHN_RP_ID",
+    "WEBAUTHN_DISPLAY_NAME",
+    "SMTP_EMAIL",
+    "SMTP_PASSWORD",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "COUPON_CODE",
+    "LISTEN_ADDR"
+  ],
+  "public": false,
+  "installCommand": "go mod download"
+}
