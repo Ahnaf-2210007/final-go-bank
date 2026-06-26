@@ -2,11 +2,5 @@
   "buildCommand": "go build -o api .",
   "devCommand": "go run .",
   "framework": "go",
-  "functions": {
-    "api/**": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
   "installCommand": "go mod download"
 }
