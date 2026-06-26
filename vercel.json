@@ -21,6 +21,5 @@
     "COUPON_CODE",
     "LISTEN_ADDR"
   ],
-  "public": false,
   "installCommand": "go mod download"
 }
