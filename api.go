@@ -65,7 +65,9 @@ func (s *APIServer) Run() {
 
 	log.Println("JSON API server is running on", s.listenAddr)
 
-	http.ListenAndServe(s.listenAddr, handler)
+	if err := http.ListenAndServe(s.listenAddr, handler); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
 
 // corsMiddleware adds CORS headers to all responses and handles preflight requests

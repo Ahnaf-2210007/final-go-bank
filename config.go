@@ -52,8 +52,15 @@ func LoadConfig() (*Config, error) {
 		)
 	}
 
+	// For Vercel deployment, use PORT environment variable if available
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+	listenAddr := ":" + port
+
 	return &Config{
-		ListenAddr:      getEnv("LISTEN_ADDR", ":3000"),
+		ListenAddr:      listenAddr,
 		DBDSN:           dsn,
 		JWTSecret:       jwtSecret,
 		SMTPEmail:       os.Getenv("SMTP_EMAIL"),
