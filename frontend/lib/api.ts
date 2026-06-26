@@ -1,4 +1,28 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const DEFAULT_API_BASE_URL = 'http://localhost:3000';
+
+function getApiBaseUrl() {
+  return (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE_URL)
+    .trim()
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\/+$/g, '');
+}
+
+function apiUrl(path: string) {
+  try {
+    return new URL(path, `${getApiBaseUrl()}/`).toString();
+  } catch {
+    throw new Error('Invalid NEXT_PUBLIC_API_URL. Use a full URL like http://localhost:3000');
+  }
+}
+
+async function readError(response: Response, fallback: string) {
+  try {
+    const error = await response.json();
+    return error.error || error.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export interface ApiResponse<T> {
   data?: T;
@@ -7,13 +31,13 @@ export interface ApiResponse<T> {
 }
 
 export interface LoginRequest {
-  email: string;
+  number: string;
   password: string;
 }
 
 export interface LoginResponse {
   token: string;
-  userId: string;
+  number: number;
 }
 
 export interface RegisterRequest {
@@ -24,37 +48,42 @@ export interface RegisterRequest {
 }
 
 export interface VerifyEmailRequest {
-  email: string;
   code: string;
 }
 
 export interface AccountResponse {
-  id: string;
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
-  accountNumber: string;
+  number: number;
   balance: number;
   createdAt: string;
+}
+
+export interface RegisterResponse {
+  message: string;
 }
 
 export const api = {
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(apiUrl('/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({
+          number: Number(credentials.number),
+          password: credentials.password,
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        throw new Error(await readError(response, 'Login failed'));
       }
 
-      return await response.json();
+      return { data: await response.json() };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'An error occurred',
@@ -62,9 +91,9 @@ export const api = {
     }
   },
 
-  async register(data: RegisterRequest): Promise<ApiResponse<AccountResponse>> {
+  async register(data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/account`, {
+      const response = await fetch(apiUrl('/account'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,11 +102,10 @@ export const api = {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
+        throw new Error(await readError(response, 'Registration failed'));
       }
 
-      return await response.json();
+      return { data: await response.json() };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'An error occurred',
@@ -87,7 +115,7 @@ export const api = {
 
   async verifyEmail(data: VerifyEmailRequest): Promise<ApiResponse<{ verified: boolean }>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/account/verification`, {
+      const response = await fetch(apiUrl('/account/verification'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,11 +124,10 @@ export const api = {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Verification failed');
+        throw new Error(await readError(response, 'Verification failed'));
       }
 
-      return await response.json();
+      return { data: await response.json() };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'An error occurred',
@@ -110,7 +137,7 @@ export const api = {
 
   async getAccount(token: string): Promise<ApiResponse<AccountResponse>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/account`, {
+      const response = await fetch(apiUrl('/account'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -119,11 +146,10 @@ export const api = {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch account');
+        throw new Error(await readError(response, 'Failed to fetch account'));
       }
 
-      return await response.json();
+      return { data: await response.json() };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'An error occurred',
@@ -133,7 +159,7 @@ export const api = {
 
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`);
+      const response = await fetch(apiUrl('/health'));
       return response.ok;
     } catch {
       return false;

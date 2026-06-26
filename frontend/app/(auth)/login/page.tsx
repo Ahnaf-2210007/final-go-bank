@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<LoginRequest>({
-    email: '',
+    number: '',
     password: '',
   });
 
@@ -38,10 +38,10 @@ export default function LoginPage() {
 
       if (response.data) {
         auth.setToken(response.data.token);
-        auth.setUser({ id: response.data.userId, email: formData.email });
+        auth.setUser({ number: response.data.number });
         router.push('/dashboard');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -63,18 +63,19 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
-                Email
+              <label htmlFor="number" className="block text-sm font-medium text-neutral-300 mb-2">
+                Account Number
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
+                id="number"
+                name="number"
+                type="text"
+                inputMode="numeric"
+                value={formData.number}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 bg-neutral-900 border border-neutral-800 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition"
-                placeholder="you@example.com"
+                placeholder="123456"
               />
             </div>
 

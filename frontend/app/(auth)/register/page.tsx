@@ -45,7 +45,7 @@ export default function RegisterPage() {
           router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
         }, 1500);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

@@ -87,7 +87,7 @@ export default function DashboardPage() {
               {/* Account Card */}
               <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-6">
                 <h3 className="text-neutral-400 text-sm font-semibold mb-4">Account Number</h3>
-                <p className="text-2xl font-bold text-white mb-2">{account.accountNumber}</p>
+                <p className="text-2xl font-bold text-white mb-2">{account.number}</p>
                 <p className="text-neutral-500 text-sm">
                   {account.firstName} {account.lastName}
                 </p>

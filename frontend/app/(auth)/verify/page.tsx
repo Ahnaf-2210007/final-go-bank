@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { api, VerifyEmailRequest } from '@/lib/api';
+import { api } from '@/lib/api';
 
 function VerifyContent() {
   const router = useRouter();
@@ -11,15 +11,8 @@ function VerifyContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-
-  useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setEmail(decodeURIComponent(emailParam));
-    }
-  }, [searchParams]);
+  const email = searchParams.get('email') || '';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,7 +21,7 @@ function VerifyContent() {
     setLoading(true);
 
     try {
-      const response = await api.verifyEmail({ email, code });
+      const response = await api.verifyEmail({ code });
 
       if (response.error) {
         setError(response.error);
@@ -41,7 +34,7 @@ function VerifyContent() {
           router.push('/login');
         }, 2000);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

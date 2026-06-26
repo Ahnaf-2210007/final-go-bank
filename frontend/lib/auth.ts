@@ -1,6 +1,10 @@
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
+export interface StoredUser {
+  number: number;
+}
+
 export const auth = {
   setToken(token: string): void {
     if (typeof window !== 'undefined') {
@@ -22,13 +26,13 @@ export const auth = {
     }
   },
 
-  setUser(user: any): void {
+  setUser(user: StoredUser): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
     }
   },
 
-  getUser(): any {
+  getUser(): StoredUser | null {
     if (typeof window !== 'undefined') {
       const user = localStorage.getItem(USER_KEY);
       return user ? JSON.parse(user) : null;
