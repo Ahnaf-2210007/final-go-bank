@@ -1,6 +1,7 @@
 {
-  "buildCommand": "go build -o api .",
-  "devCommand": "go run .",
-  "framework": "go",
-  "installCommand": "go mod download"
+  "buildCommand": "cd frontend && npm run build",
+  "devCommand": "cd frontend && npm run dev",
+  "framework": "nextjs",
+  "installCommand": "cd frontend && npm install",
+  "env": ["DATABASE_URL", "JWT_SECRET", "CORS_ORIGIN"]
 }
