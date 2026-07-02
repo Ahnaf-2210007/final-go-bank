@@ -3,5 +3,5 @@
   "devCommand": "cd frontend && npm run dev",
   "framework": "nextjs",
   "installCommand": "cd frontend && npm install",
-  "env": ["DATABASE_URL", "JWT_SECRET", "CORS_ORIGIN"]
+  "env": ["DATABASE_URL", "JWT_SECRET", "CORS_ORIGIN", "NEXT_PUBLIC_API_URL"]
 }
