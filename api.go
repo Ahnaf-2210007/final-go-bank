@@ -19,9 +19,9 @@ import (
 )
 
 type APIServer struct {
-	listenAddr string
-	store      Storage
-	cfg        *Config
+	listenAddr      string
+	store           Storage
+	cfg             *Config
 	webAuthnHandler *WebAuthnHandler
 }
 
@@ -31,9 +31,9 @@ func NewAPIServer(listenAddr string, store Storage, cfg *Config) *APIServer {
 		log.Fatal(err)
 	}
 	return &APIServer{
-		listenAddr: listenAddr,
-		store:      store,
-		cfg:        cfg,
+		listenAddr:      listenAddr,
+		store:           store,
+		cfg:             cfg,
 		webAuthnHandler: webAuthnHandler,
 	}
 }
@@ -125,8 +125,9 @@ func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	resp := LoginResponse{
-		Token:  token,
-		Number: acc.Number,
+		Token:   token,
+		Number:  acc.Number,
+		Account: acc,
 	}
 
 	return WriteJSON(w, http.StatusOK, resp)
@@ -137,8 +138,20 @@ func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 	if r.Method == "POST" {
 		return s.handleCreateAccount(w, r)
 	}
+	if r.Method == "GET" {
+		return s.handleGetCurrentAccount(w, r)
+	}
 
 	return fmt.Errorf("method not allowed %s", r.Method)
+}
+
+func (s *APIServer) handleGetCurrentAccount(w http.ResponseWriter, r *http.Request) error {
+	acc := s.getAuthenticatedAccount(w, r)
+	if acc == nil {
+		return nil
+	}
+
+	return WriteJSON(w, http.StatusOK, acc)
 }
 
 func (s *APIServer) handleGetAccountByID(w http.ResponseWriter, r *http.Request) error {
@@ -259,7 +272,16 @@ func (s *APIServer) handleVerification(w http.ResponseWriter, r *http.Request) e
 		log.Printf("failed to delete pending account %d: %v", pending.ID, err)
 	}
 
-	return WriteJSON(w, http.StatusOK, account)
+	token, err := createJWT(account, s.cfg.JWTSecret)
+	if err != nil {
+		return err
+	}
+
+	return WriteJSON(w, http.StatusOK, LoginResponse{
+		Token:   token,
+		Number:  account.Number,
+		Account: account,
+	})
 }
 
 // generateVerificationCode returns a cryptographically random 6-digit string (zero-padded).
@@ -802,6 +824,11 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s Storage, secret string) http.Ha
 }
 
 func validateJWT(tokenString, secret string) (*jwt.Token, error) {
+	tokenString = strings.TrimSpace(tokenString)
+	if strings.HasPrefix(strings.ToLower(tokenString), "bearer ") {
+		tokenString = strings.TrimSpace(tokenString[7:])
+	}
+
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

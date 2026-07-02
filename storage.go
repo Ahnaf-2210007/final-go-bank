@@ -140,7 +140,6 @@ func (s *PostgresStore) GetWebAuthnCredentialsByAccountID(accountID int) ([]*Web
 	return creds, rows.Err()
 }
 
-
 func (s *PostgresStore) CreateAccountTable() error {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		id SERIAL PRIMARY KEY,
@@ -167,12 +166,14 @@ func (s *PostgresStore) CreateAccountTable() error {
 }
 
 func (s *PostgresStore) CreateAccount(acc *Account) error {
+	createdAt := time.Now().UTC()
 	query := `INSERT INTO account
 	(first_name, last_name, number, email, encrypted_password, balance, created_at)
 	values
-	($1, $2, $3, $4, $5, $6, $7)`
+	($1, $2, $3, $4, $5, $6, $7)
+	RETURNING id`
 
-	_, err := s.db.Exec(
+	err := s.db.QueryRow(
 		query,
 		acc.FirstName,
 		acc.LastName,
@@ -180,10 +181,16 @@ func (s *PostgresStore) CreateAccount(acc *Account) error {
 		acc.Email,
 		acc.EncryptedPassword,
 		acc.Balance,
-		time.Now().UTC(),
-	)
+		createdAt,
+	).Scan(&acc.ID)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	acc.CreatedAt = createdAt
+
+	return nil
 }
 
 func (s *PostgresStore) UpdateAccount(acc *Account) error {
