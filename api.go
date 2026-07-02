@@ -125,9 +125,8 @@ func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	resp := LoginResponse{
-		Token:   token,
-		Number:  acc.Number,
-		Account: acc,
+		Token:  token,
+		Number: acc.Number,
 	}
 
 	return WriteJSON(w, http.StatusOK, resp)
@@ -278,9 +277,8 @@ func (s *APIServer) handleVerification(w http.ResponseWriter, r *http.Request) e
 	}
 
 	return WriteJSON(w, http.StatusOK, LoginResponse{
-		Token:   token,
-		Number:  account.Number,
-		Account: account,
+		Token:  token,
+		Number: account.Number,
 	})
 }
 
